@@ -36,7 +36,8 @@ const GamePage = () => {
     canvas.width = boardWidth * CELL_SIZE;
     canvas.height = boardHeight * CELL_SIZE;
 
-    ctx.fillStyle = '#1a1a1a';
+    // Background - darker gray for unpaintable areas (air)
+    ctx.fillStyle = '#2a2a2a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const colorMap: { [key: string]: string } = {
@@ -46,12 +47,32 @@ const GamePage = () => {
       YELLOW: '#FFFF00',
     };
 
+    // Create a set of paintable blocks for quick lookup
+    const paintableSet = new Set(gameState.paintableBlocks || []);
+
+    // Draw paintable blocks with light gray (unpainted platforms/surfaces)
+    paintableSet.forEach((pos) => {
+      const [x, y] = pos.split(',').map(Number);
+      const color = gameState.board[pos];
+      
+      if (!color) {
+        // Unpainted paintable block - light gray with border
+        ctx.fillStyle = '#666666';
+        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        ctx.strokeStyle = '#555555';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      }
+    });
+
+    // Draw painted blocks
     Object.entries(gameState.board).forEach(([pos, color]) => {
       const [x, y] = pos.split(',').map(Number);
       ctx.fillStyle = colorMap[color] || '#888888';
       ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     });
 
+    // Draw players
     gameState.players.forEach((player) => {
       ctx.fillStyle = colorMap[player.color] || '#FFFFFF';
       ctx.strokeStyle = '#FFFFFF';

@@ -21,6 +21,7 @@ export interface GameState {
   state: 'LOBBY' | 'PLAYING' | 'FINISHED';
   players: Player[];
   board: { [key: string]: string };
+  paintableBlocks?: string[];
   remainingTime: number;
 }
 
