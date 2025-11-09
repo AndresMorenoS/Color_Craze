@@ -1,0 +1,156 @@
+.lobby-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.lobby-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.5rem;
+  color: #667eea;
+  margin-bottom: 1rem;
+}
+
+.game-code {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #666;
+}
+
+.game-code strong {
+  font-size: 1.5rem;
+  color: #667eea;
+  letter-spacing: 2px;
+}
+
+.timer {
+  font-size: 1.3rem;
+  color: #764ba2;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.timer strong {
+  font-size: 1.5rem;
+}
+
+.error {
+  color: #e74c3c;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #fee;
+  border-radius: 5px;
+}
+
+.color-selection h2 {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.color-button {
+  padding: 2rem;
+  border: 3px solid transparent;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.color-button:hover {
+  transform: scale(1.05);
+  border-color: white;
+}
+
+.your-color {
+  margin: 2rem 0;
+}
+
+.your-color h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.color-display {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 4px solid #ddd;
+}
+
+.players-list {
+  margin: 2rem 0;
+}
+
+.players-list h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.players {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f5f5f5;
+  border-radius: 10px;
+  gap: 1rem;
+}
+
+.player-color {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+}
+
+.player-name {
+  flex: 1;
+  text-align: left;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.you-badge {
+  background: #667eea;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.waiting-message {
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  color: #999;
+  font-style: italic;
+}
