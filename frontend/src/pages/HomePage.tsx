@@ -32,7 +32,7 @@ const HomePage = () => {
       localStorage.setItem('playerName', playerName);
       localStorage.setItem('playerColor', data.color);
       navigate(`/lobby/${data.gameCode}`);
-    } catch (err) {
+    } catch {
       setError('Failed to create game. Is the server running?');
     } finally {
       setLoading(false);

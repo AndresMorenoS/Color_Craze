@@ -47,7 +47,7 @@ const LobbyPage = () => {
       } else {
         setError(data.message);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to join game');
     }
   };
