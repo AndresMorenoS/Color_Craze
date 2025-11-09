@@ -4,13 +4,15 @@ public class JoinGameResponse {
     private String playerId;
     private boolean success;
     private String message;
+    private String color;
     
     public JoinGameResponse() {}
     
-    public JoinGameResponse(String playerId, boolean success, String message) {
+    public JoinGameResponse(String playerId, boolean success, String message, String color) {
         this.playerId = playerId;
         this.success = success;
         this.message = message;
+        this.color = color;
     }
     
     public String getPlayerId() { return playerId; }
@@ -21,4 +23,7 @@ public class JoinGameResponse {
     
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+    
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
 }

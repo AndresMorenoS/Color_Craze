@@ -39,25 +39,28 @@ public class GameService {
         activeGames.put(code, game);
         startLobbyTimer(code);
         
-        return new CreateGameResponse(code, playerId);
+        // Broadcast initial game state so host sees themselves in the lobby
+        broadcastGameState(code);
+        
+        return new CreateGameResponse(code, playerId, PlayerColor.RED.name());
     }
     
     public JoinGameResponse joinGame(String code, String playerName, PlayerColor color) {
         Game game = activeGames.get(code);
         if (game == null) {
-            return new JoinGameResponse(null, false, "Game not found");
+            return new JoinGameResponse(null, false, "Game not found", null);
         }
         
         if (game.getState() != Game.GameState.LOBBY) {
-            return new JoinGameResponse(null, false, "Game already started");
+            return new JoinGameResponse(null, false, "Game already started", null);
         }
         
         if (game.getPlayers().size() >= Game.getMaxPlayers()) {
-            return new JoinGameResponse(null, false, "Game is full");
+            return new JoinGameResponse(null, false, "Game is full", null);
         }
         
         if (isColorTaken(game, color)) {
-            return new JoinGameResponse(null, false, "Color already taken");
+            return new JoinGameResponse(null, false, "Color already taken", null);
         }
         
         String playerId = UUID.randomUUID().toString();
@@ -66,7 +69,7 @@ public class GameService {
         
         broadcastGameState(code);
         
-        return new JoinGameResponse(playerId, true, "Joined successfully");
+        return new JoinGameResponse(playerId, true, "Joined successfully", color.name());
     }
     
     private boolean isColorTaken(Game game, PlayerColor color) {

@@ -30,6 +30,7 @@ const HomePage = () => {
       const data: CreateGameResponse = await response.json();
       localStorage.setItem('playerId', data.playerId);
       localStorage.setItem('playerName', playerName);
+      localStorage.setItem('playerColor', data.color);
       navigate(`/lobby/${data.gameCode}`);
     } catch (err) {
       setError('Failed to create game. Is the server running?');

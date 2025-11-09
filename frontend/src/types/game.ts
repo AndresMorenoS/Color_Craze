@@ -41,10 +41,12 @@ export interface PlayerScore {
 export interface CreateGameResponse {
   gameCode: string;
   playerId: string;
+  color: string;
 }
 
 export interface JoinGameResponse {
   playerId: string;
   success: boolean;
   message: string;
+  color: string;
 }
