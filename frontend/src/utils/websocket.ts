@@ -1,12 +1,13 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import type { GameState, GameResult } from '../types/game';
 
 const BACKEND_URL = 'http://localhost:8080';
 
 export const createWebSocketClient = (
   gameCode: string,
-  onStateUpdate: (state: any) => void,
-  onResult: (result: any) => void
+  onStateUpdate: (state: GameState) => void,
+  onResult: (result: GameResult) => void
 ): Client => {
   const client = new Client({
     webSocketFactory: () => new SockJS(`${BACKEND_URL}/ws`),

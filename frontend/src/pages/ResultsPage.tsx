@@ -29,6 +29,7 @@ const ResultsPage = () => {
 
   const handlePlayAgain = () => {
     localStorage.removeItem('playerId');
+    localStorage.removeItem('playerColor');
     navigate('/');
   };
 
@@ -53,6 +54,9 @@ const ResultsPage = () => {
             style={{ backgroundColor: getColorHex(result.winnerColor) }}
           />
           <div className="winner-name">{result.winnerName}</div>
+          <div className="winner-score">
+            {result.scores.find(s => s.id === result.winnerId)?.score || 0} blocks painted
+          </div>
         </div>
 
         <div className="scores-section">

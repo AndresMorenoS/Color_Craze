@@ -21,6 +21,7 @@ export interface GameState {
   state: 'LOBBY' | 'PLAYING' | 'FINISHED';
   players: Player[];
   board: { [key: string]: string };
+  paintableBlocks?: string[];
   remainingTime: number;
 }
 
@@ -41,10 +42,12 @@ export interface PlayerScore {
 export interface CreateGameResponse {
   gameCode: string;
   playerId: string;
+  color: string;
 }
 
 export interface JoinGameResponse {
   playerId: string;
   success: boolean;
   message: string;
+  color: string;
 }

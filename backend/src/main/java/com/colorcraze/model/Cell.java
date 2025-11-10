@@ -4,11 +4,20 @@ public class Cell {
     private int x;
     private int y;
     private PlayerColor color;
+    private boolean paintable;
     
     public Cell(int x, int y) {
         this.x = x;
         this.y = y;
         this.color = null;
+        this.paintable = true; // default to paintable
+    }
+    
+    public Cell(int x, int y, boolean paintable) {
+        this.x = x;
+        this.y = y;
+        this.color = null;
+        this.paintable = paintable;
     }
     
     public int getX() { return x; }
@@ -19,4 +28,7 @@ public class Cell {
     
     public PlayerColor getColor() { return color; }
     public void setColor(PlayerColor color) { this.color = color; }
+    
+    public boolean isPaintable() { return paintable; }
+    public void setPaintable(boolean paintable) { this.paintable = paintable; }
 }

@@ -39,25 +39,28 @@ public class GameService {
         activeGames.put(code, game);
         startLobbyTimer(code);
         
-        return new CreateGameResponse(code, playerId);
+        // Broadcast initial game state so host sees themselves in the lobby
+        broadcastGameState(code);
+        
+        return new CreateGameResponse(code, playerId, PlayerColor.RED.name());
     }
     
     public JoinGameResponse joinGame(String code, String playerName, PlayerColor color) {
         Game game = activeGames.get(code);
         if (game == null) {
-            return new JoinGameResponse(null, false, "Game not found");
+            return new JoinGameResponse(null, false, "Game not found", null);
         }
         
         if (game.getState() != Game.GameState.LOBBY) {
-            return new JoinGameResponse(null, false, "Game already started");
+            return new JoinGameResponse(null, false, "Game already started", null);
         }
         
         if (game.getPlayers().size() >= Game.getMaxPlayers()) {
-            return new JoinGameResponse(null, false, "Game is full");
+            return new JoinGameResponse(null, false, "Game is full", null);
         }
         
         if (isColorTaken(game, color)) {
-            return new JoinGameResponse(null, false, "Color already taken");
+            return new JoinGameResponse(null, false, "Color already taken", null);
         }
         
         String playerId = UUID.randomUUID().toString();
@@ -66,7 +69,7 @@ public class GameService {
         
         broadcastGameState(code);
         
-        return new JoinGameResponse(playerId, true, "Joined successfully");
+        return new JoinGameResponse(playerId, true, "Joined successfully", color.name());
     }
     
     private boolean isColorTaken(Game game, PlayerColor color) {
@@ -161,16 +164,42 @@ public class GameService {
     }
     
     private void updatePlayerPhysics(Player player, Board board) {
+        // Store old position
+        double oldX = player.getX();
+        double oldY = player.getY();
+        
+        // Update position based on velocity
         player.setX(player.getX() + player.getVelocityX());
         player.setY(player.getY() + player.getVelocityY());
         
+        // Apply gravity if jumping
         if (player.isJumping()) {
             player.setVelocityY(player.getVelocityY() + GRAVITY);
         }
         
+        // Boundary checks
         if (player.getX() < 0) player.setX(0);
         if (player.getX() >= board.getWidth()) player.setX(board.getWidth() - 1);
         
+        // Check collision with paintable blocks
+        int cellX = (int) player.getX();
+        int cellY = (int) player.getY();
+        int cellYBelow = cellY + 1;
+        
+        // Check if standing on a paintable block (landing on platform or ground)
+        if (board.isCellPaintable(cellX, cellYBelow)) {
+            // If moving down and about to collide with a paintable block from above
+            if (player.getVelocityY() > 0 && oldY < cellYBelow) {
+                player.setY(cellYBelow - 1);
+                player.setVelocityY(0);
+                player.setJumping(false);
+            }
+        } else if (player.getVelocityY() >= 0) {
+            // Not on a platform and falling
+            player.setJumping(true);
+        }
+        
+        // Ground collision - bottom of map
         int groundY = board.getHeight() - 2;
         if (player.getY() >= groundY) {
             player.setY(groundY);
@@ -178,6 +207,7 @@ public class GameService {
             player.setJumping(false);
         }
         
+        // Ceiling collision
         if (player.getY() < 0) {
             player.setY(0);
             player.setVelocityY(0);
@@ -230,9 +260,15 @@ public class GameService {
         dto.setPlayers(playerDTOs);
         
         Map<String, String> boardData = new HashMap<>();
+        List<String> paintableBlocks = new ArrayList<>();
         Board board = game.getBoard();
         for (int y = 0; y < board.getHeight(); y++) {
             for (int x = 0; x < board.getWidth(); x++) {
+                // Track paintable blocks
+                if (board.isCellPaintable(x, y)) {
+                    paintableBlocks.add(x + "," + y);
+                }
+                // Track painted cells
                 PlayerColor color = board.getCellColor(x, y);
                 if (color != null) {
                     boardData.put(x + "," + y, color.name());
@@ -240,6 +276,7 @@ public class GameService {
             }
         }
         dto.setBoard(boardData);
+        dto.setPaintableBlocks(paintableBlocks);
         
         if (game.getState() == Game.GameState.LOBBY) {
             dto.setRemainingTime(game.getRemainingLobbyTime());

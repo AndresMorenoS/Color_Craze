@@ -33,6 +33,17 @@
   padding: 2rem;
   background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
   border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
 }
 
 .trophy {
@@ -61,6 +72,13 @@
   font-weight: bold;
   color: white;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.winner-score {
+  font-size: 1.3rem;
+  color: white;
+  margin-top: 0.5rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .scores-section {

@@ -11,6 +11,7 @@ public class GameStateDTO {
     private String state;
     private List<PlayerDTO> players;
     private Map<String, String> board;
+    private List<String> paintableBlocks;
     private long remainingTime;
     
     public GameStateDTO() {}
@@ -26,6 +27,9 @@ public class GameStateDTO {
     
     public Map<String, String> getBoard() { return board; }
     public void setBoard(Map<String, String> board) { this.board = board; }
+    
+    public List<String> getPaintableBlocks() { return paintableBlocks; }
+    public void setPaintableBlocks(List<String> paintableBlocks) { this.paintableBlocks = paintableBlocks; }
     
     public long getRemainingTime() { return remainingTime; }
     public void setRemainingTime(long remainingTime) { this.remainingTime = remainingTime; }

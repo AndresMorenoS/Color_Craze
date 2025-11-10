@@ -18,13 +18,73 @@ public class Board {
     private void initializeCells() {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                cells[y][x] = new Cell(x, y);
+                boolean isPaintable = isPaintableCell(x, y);
+                cells[y][x] = new Cell(x, y, isPaintable);
             }
         }
     }
     
+    /**
+     * Determines if a cell should be paintable.
+     * Paintable cells include:
+     * - Floor (bottom 2 rows)
+     * - Left and right walls (leftmost and rightmost 2 columns)
+     * - Ceiling (top 2 rows)
+     * - Suspended platforms in the middle area
+     */
+    private boolean isPaintableCell(int x, int y) {
+        // Floor: bottom 2 rows
+        if (y >= height - 2) {
+            return true;
+        }
+        
+        // Ceiling: top 2 rows
+        if (y <= 1) {
+            return true;
+        }
+        
+        // Left wall: leftmost 2 columns
+        if (x <= 1) {
+            return true;
+        }
+        
+        // Right wall: rightmost 2 columns
+        if (x >= width - 2) {
+            return true;
+        }
+        
+        // Suspended platforms - add some floating platforms
+        // Platform 1: middle-left area
+        if (y >= 8 && y <= 10 && x >= 8 && x <= 15) {
+            return true;
+        }
+        
+        // Platform 2: middle-right area
+        if (y >= 8 && y <= 10 && x >= 24 && x <= 31) {
+            return true;
+        }
+        
+        // Platform 3: upper-middle area
+        if (y >= 5 && y <= 7 && x >= 15 && x <= 24) {
+            return true;
+        }
+        
+        // Platform 4: lower-middle platforms (left)
+        if (y >= 18 && y <= 20 && x >= 10 && x <= 17) {
+            return true;
+        }
+        
+        // Platform 5: lower-middle platforms (right)
+        if (y >= 18 && y <= 20 && x >= 22 && x <= 29) {
+            return true;
+        }
+        
+        // Everything else is not paintable (air)
+        return false;
+    }
+    
     public void paintCell(int x, int y, PlayerColor color) {
-        if (isValidPosition(x, y)) {
+        if (isValidPosition(x, y) && cells[y][x].isPaintable()) {
             cells[y][x].setColor(color);
         }
     }
@@ -51,6 +111,13 @@ public class Board {
             }
         }
         return scores;
+    }
+    
+    public boolean isCellPaintable(int x, int y) {
+        if (isValidPosition(x, y)) {
+            return cells[y][x].isPaintable();
+        }
+        return false;
     }
     
     public int getWidth() { return width; }

@@ -11,7 +11,9 @@ const LobbyPage = () => {
   const navigate = useNavigate();
   const [playerId, setPlayerId] = useState<string | null>(localStorage.getItem('playerId'));
   const [playerName] = useState<string>(localStorage.getItem('playerName') || '');
-  const [selectedColor, setSelectedColor] = useState<PlayerColor | null>(null);
+  const [selectedColor, setSelectedColor] = useState<PlayerColor | null>(
+    (localStorage.getItem('playerColor') as PlayerColor) || null
+  );
   const [joined, setJoined] = useState(!!playerId);
   const [error, setError] = useState('');
 
@@ -40,11 +42,12 @@ const LobbyPage = () => {
         setPlayerId(data.playerId);
         localStorage.setItem('playerId', data.playerId);
         setSelectedColor(color);
+        localStorage.setItem('playerColor', data.color);
         setJoined(true);
       } else {
         setError(data.message);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to join game');
     }
   };
