@@ -39,8 +39,12 @@ public class GameService {
         activeGames.put(code, game);
         startLobbyTimer(code);
         
-        // Broadcast initial game state so host sees themselves in the lobby
-        broadcastGameState(code);
+        // Schedule initial broadcast after a short delay to ensure frontend WebSocket is connected
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.schedule(() -> {
+            broadcastGameState(code);
+            scheduler.shutdown();
+        }, 500, TimeUnit.MILLISECONDS);
         
         return new CreateGameResponse(code, playerId, PlayerColor.RED.name());
     }
@@ -113,6 +117,16 @@ public class GameService {
     
     private void startLobbyTimer(String code) {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        
+        // Broadcast game state every second during lobby
+        scheduler.scheduleAtFixedRate(() -> {
+            Game game = activeGames.get(code);
+            if (game != null && game.getState() == Game.GameState.LOBBY) {
+                broadcastGameState(code);
+            }
+        }, 1, 1, TimeUnit.SECONDS);
+        
+        // Start game after lobby duration
         scheduler.schedule(() -> {
             Game game = activeGames.get(code);
             if (game != null && game.getState() == Game.GameState.LOBBY) {
@@ -160,6 +174,15 @@ public class GameService {
         for (Player player : game.getPlayers().values()) {
             updatePlayerPhysics(player, game.getBoard());
             paintCellsUnderPlayer(player, game.getBoard());
+        }
+        // Update scores in real-time during gameplay
+        updatePlayerScores(game);
+    }
+    
+    private void updatePlayerScores(Game game) {
+        Map<PlayerColor, Integer> colorScores = game.getBoard().calculateScores();
+        for (Player player : game.getPlayers().values()) {
+            player.setScore(colorScores.getOrDefault(player.getColor(), 0));
         }
     }
     
