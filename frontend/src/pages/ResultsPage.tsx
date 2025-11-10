@@ -27,7 +27,7 @@ const ResultsPage = () => {
     return colorMap[color] || '#000000';
   };
 
-  const handlePlayAgain = () => {
+  const handleFinish = () => {
     localStorage.removeItem('playerId');
     localStorage.removeItem('playerColor');
     navigate('/');
@@ -76,8 +76,8 @@ const ResultsPage = () => {
           </div>
         </div>
 
-        <button onClick={handlePlayAgain} className="play-again-button">
-          Play Again
+        <button onClick={handleFinish} className="play-again-button">
+          Finalizar
         </button>
       </div>
     </div>
