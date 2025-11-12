@@ -28,8 +28,7 @@ const ResultsPage = () => {
   };
 
   const handleFinish = () => {
-    localStorage.removeItem('playerId');
-    localStorage.removeItem('playerColor');
+    localStorage.clear();
     navigate('/');
   };
 
