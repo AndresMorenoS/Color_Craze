@@ -20,7 +20,7 @@ const GamePage = () => {
 
   useEffect(() => {
     if (gameResult) {
-      navigate(`/results/${code}`);
+      navigate(`/results/${code}`, { state: { gameResult } });
     }
   }, [gameResult, code, navigate]);
 
