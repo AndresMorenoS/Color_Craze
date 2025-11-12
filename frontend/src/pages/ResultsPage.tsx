@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useWebSocketGame } from '../hooks/useWebSocketGame';
 import type { GameResult } from '../types/game';
 import './ResultsPage.css';
@@ -7,15 +7,21 @@ import './ResultsPage.css';
 const ResultsPage = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [playerId] = [localStorage.getItem('playerId')];
   const { gameResult: wsResult } = useWebSocketGame(code || null, playerId);
   const [result, setResult] = useState<GameResult | null>(null);
 
   useEffect(() => {
-    if (wsResult) {
+    // First priority: use result from navigation state
+    const stateResult = location.state?.gameResult;
+    if (stateResult) {
+      setResult(stateResult);
+    } else if (wsResult) {
+      // Fallback: use result from WebSocket
       setResult(wsResult);
     }
-  }, [wsResult]);
+  }, [location.state, wsResult]);
 
   const getColorHex = (color: string): string => {
     const colorMap: { [key: string]: string } = {
