@@ -191,49 +191,63 @@ public class GameService {
         double oldX = player.getX();
         double oldY = player.getY();
         
-        // Update position based on velocity
-        player.setX(player.getX() + player.getVelocityX());
-        player.setY(player.getY() + player.getVelocityY());
-        
         // Apply gravity if jumping
         if (player.isJumping()) {
             player.setVelocityY(player.getVelocityY() + GRAVITY);
         }
         
-        // Boundary checks
-        if (player.getX() < 0) player.setX(0);
-        if (player.getX() >= board.getWidth()) player.setX(board.getWidth() - 1);
+        // Update position based on velocity
+        player.setX(player.getX() + player.getVelocityX());
+        player.setY(player.getY() + player.getVelocityY());
         
-        // Check collision with paintable blocks
+        // Horizontal boundary checks
+        if (player.getX() < 1) player.setX(1); // Keep away from left wall (x=0)
+        if (player.getX() >= board.getWidth() - 1) player.setX(board.getWidth() - 2); // Keep away from right wall
+        
         int cellX = (int) player.getX();
         int cellY = (int) player.getY();
-        int cellYBelow = cellY + 1;
         
-        // Check if standing on a paintable block (landing on platform or ground)
-        if (board.isCellPaintable(cellX, cellYBelow)) {
-            // If moving down and about to collide with a paintable block from above
-            if (player.getVelocityY() > 0 && oldY < cellYBelow) {
+        // Ceiling collision - prevent player from going into or through the ceiling (y=0)
+        if (player.getY() <= 0) {
+            player.setY(1); // Keep player below the ceiling block
+            player.setVelocityY(0);
+            // If hitting ceiling, cancel upward velocity and start falling
+            if (player.getVelocityY() < 0) {
+                player.setJumping(true);
+            }
+        }
+        
+        // Check if player is inside a paintable block (shouldn't happen, but prevent getting stuck)
+        if (board.isCellPaintable(cellX, cellY)) {
+            // Player is inside a solid block - push them out
+            // Try pushing up first (most common case when landing on platform)
+            if (board.isCellPaintable(cellX, cellY) && !board.isCellPaintable(cellX, cellY - 1)) {
+                player.setY(cellY - 1);
+                player.setVelocityY(0);
+                player.setJumping(false);
+            }
+        }
+        
+        // Check collision with blocks below (landing on platforms/ground)
+        int cellYBelow = (int)(player.getY() + 1);
+        if (cellYBelow < board.getHeight() && board.isCellPaintable(cellX, cellYBelow)) {
+            // If moving down and there's a solid block below
+            if (player.getVelocityY() >= 0) {
                 player.setY(cellYBelow - 1);
                 player.setVelocityY(0);
                 player.setJumping(false);
             }
-        } else if (player.getVelocityY() >= 0) {
-            // Not on a platform and falling
+        } else if (player.getVelocityY() >= 0 && cellYBelow < board.getHeight()) {
+            // No platform below and moving down - should be jumping/falling
             player.setJumping(true);
         }
         
-        // Ground collision - bottom of map
+        // Ground collision - bottom of map (floor is at y=29, player stands at y=28)
         int groundY = board.getHeight() - 2;
         if (player.getY() >= groundY) {
             player.setY(groundY);
             player.setVelocityY(0);
             player.setJumping(false);
-        }
-        
-        // Ceiling collision
-        if (player.getY() < 0) {
-            player.setY(0);
-            player.setVelocityY(0);
         }
     }
     
