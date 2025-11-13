@@ -27,55 +27,55 @@ public class Board {
     /**
      * Determines if a cell should be paintable.
      * Paintable cells include:
-     * - Floor (bottom 2 rows)
-     * - Left and right walls (leftmost and rightmost 2 columns)
-     * - Ceiling (top 2 rows)
-     * - Suspended platforms in the middle area
+     * - Floor (bottom 1 row)
+     * - Left and right walls (leftmost and rightmost 1 column)
+     * - Ceiling (top 1 row)
+     * - Suspended platforms in the middle area (1 block high)
      */
     private boolean isPaintableCell(int x, int y) {
-        // Floor: bottom 2 rows
-        if (y >= height - 2) {
+        // Floor: bottom 1 row
+        if (y >= height - 1) {
             return true;
         }
         
-        // Ceiling: top 2 rows
-        if (y <= 1) {
+        // Ceiling: top 1 row
+        if (y == 0) {
             return true;
         }
         
-        // Left wall: leftmost 2 columns
-        if (x <= 1) {
+        // Left wall: leftmost 1 column
+        if (x == 0) {
             return true;
         }
         
-        // Right wall: rightmost 2 columns
-        if (x >= width - 2) {
+        // Right wall: rightmost 1 column
+        if (x >= width - 1) {
             return true;
         }
         
-        // Suspended platforms - add some floating platforms
+        // Suspended platforms - add some floating platforms (1 block high)
         // Platform 1: middle-left area
-        if (y >= 8 && y <= 10 && x >= 8 && x <= 15) {
+        if (y == 10 && x >= 8 && x <= 15) {
             return true;
         }
         
         // Platform 2: middle-right area
-        if (y >= 8 && y <= 10 && x >= 24 && x <= 31) {
+        if (y == 10 && x >= 24 && x <= 31) {
             return true;
         }
         
         // Platform 3: upper-middle area
-        if (y >= 5 && y <= 7 && x >= 15 && x <= 24) {
+        if (y == 7 && x >= 15 && x <= 24) {
             return true;
         }
         
         // Platform 4: lower-middle platforms (left)
-        if (y >= 18 && y <= 20 && x >= 10 && x <= 17) {
+        if (y == 20 && x >= 10 && x <= 17) {
             return true;
         }
         
         // Platform 5: lower-middle platforms (right)
-        if (y >= 18 && y <= 20 && x >= 22 && x <= 29) {
+        if (y == 20 && x >= 22 && x <= 29) {
             return true;
         }
         

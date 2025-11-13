@@ -61,7 +61,7 @@ public class Game {
         for (int i = 0; i < playerList.size(); i++) {
             Player player = playerList.get(i);
             player.setX((i + 1) * spacing);
-            player.setY(BOARD_HEIGHT - 2);
+            player.setY(BOARD_HEIGHT - 2); // Player stands on top of the floor block (which is at y=29)
         }
     }
     
