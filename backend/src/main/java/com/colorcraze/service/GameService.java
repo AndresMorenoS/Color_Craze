@@ -200,9 +200,17 @@ public class GameService {
         player.setX(player.getX() + player.getVelocityX());
         player.setY(player.getY() + player.getVelocityY());
         
-        // Horizontal boundary checks
-        if (player.getX() < 1) player.setX(1); // Keep away from left wall (x=0)
-        if (player.getX() >= board.getWidth() - 1) player.setX(board.getWidth() - 2); // Keep away from right wall
+        // Horizontal boundary checks with wall collision
+        // Left wall collision (x=0)
+        if (player.getX() <= 0) {
+            player.setX(1); // Keep player away from left wall
+            player.setVelocityX(0); // Stop horizontal movement
+        }
+        // Right wall collision (x=width-1, which is x=39 for 40-wide board)
+        if (player.getX() >= board.getWidth() - 1) {
+            player.setX(board.getWidth() - 2); // Keep player away from right wall
+            player.setVelocityX(0); // Stop horizontal movement
+        }
         
         int cellX = (int) player.getX();
         int cellY = (int) player.getY();
@@ -255,8 +263,21 @@ public class GameService {
         int cellX = (int) player.getX();
         int cellY = (int) player.getY();
         
+        // Paint current cell and cell below
         board.paintCell(cellX, cellY, player.getColor());
         board.paintCell(cellX, cellY + 1, player.getColor());
+        
+        // Paint left wall if player is touching it (x=1 means touching wall at x=0)
+        if (cellX <= 1) {
+            board.paintCell(0, cellY, player.getColor());
+            board.paintCell(0, cellY + 1, player.getColor());
+        }
+        
+        // Paint right wall if player is touching it (x=width-2 means touching wall at x=width-1)
+        if (cellX >= board.getWidth() - 2) {
+            board.paintCell(board.getWidth() - 1, cellY, player.getColor());
+            board.paintCell(board.getWidth() - 1, cellY + 1, player.getColor());
+        }
     }
     
     private void endGame(String code) {
