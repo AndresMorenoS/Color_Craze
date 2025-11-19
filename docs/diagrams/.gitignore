@@ -1,0 +1,6 @@
+# Ignore generated diagram images
+# Users can generate these from .puml files using PlantUML
+*.png
+*.svg
+*.pdf
+*.eps

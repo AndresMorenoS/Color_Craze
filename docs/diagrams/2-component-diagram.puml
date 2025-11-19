@@ -1,0 +1,104 @@
+@startuml component-diagram
+title Color Craze - Component Diagram
+
+skinparam componentStyle rectangle
+
+package "Frontend (React + TypeScript + Vite)" as Frontend #lightblue {
+    component "React Router" as Router
+    component "HomePage\n(Create/Join Game)" as HomePage
+    component "LobbyPage\n(Wait for Players)" as LobbyPage
+    component "GamePage\n(Play Game)" as GamePage
+    component "ResultsPage\n(View Results)" as ResultsPage
+    component "Canvas Renderer" as Canvas
+    component "WebSocket Client\n(STOMP)" as WSClient
+    component "Movement Controls\n(Hooks)" as Controls
+    component "Game Timer\n(Hook)" as Timer
+}
+
+package "Backend (Spring Boot + Java)" as Backend #lightgreen {
+    component "REST Controllers\n(/api/games)" as RestAPI
+    component "WebSocket Controller\n(/app/games)" as WSController
+    component "GameService\n(Business Logic)" as GameService
+    component "WebSocket Config\n(STOMP Broker)" as WSConfig
+    component "CORS Config" as CORSConfig
+    
+    package "Model Layer" as Model {
+        component "Game\n(State Machine)" as GameModel
+        component "Player" as PlayerModel
+        component "Board" as BoardModel
+        component "Cell" as CellModel
+    }
+    
+    package "Game Engine" as Engine {
+        component "Game Loop\n(~30 FPS)" as GameLoop
+        component "Physics Engine\n(Movement + Jump)" as Physics
+        component "Painting Logic" as Painting
+        component "Collision Detection" as Collision
+        component "Score Calculator" as Score
+    }
+}
+
+cloud "WebSocket\nBroker" as Broker #lightyellow
+
+' Frontend connections
+Router --> HomePage
+Router --> LobbyPage
+Router --> GamePage
+Router --> ResultsPage
+
+HomePage --> WSClient : Subscribe
+LobbyPage --> WSClient : Subscribe
+GamePage --> WSClient : Subscribe
+GamePage --> Controls : Use
+GamePage --> Canvas : Render
+GamePage --> Timer : Use
+ResultsPage --> WSClient : Subscribe
+
+WSClient --> Broker : STOMP over WebSocket
+
+' Backend connections
+RestAPI --> GameService : Create/Join Game
+WSController --> GameService : Handle Move
+GameService --> GameModel : Manage Games
+GameService --> Broker : Broadcast State
+
+GameModel --> PlayerModel : Contains
+GameModel --> BoardModel : Contains
+GameModel --> Engine : Uses
+BoardModel --> CellModel : Contains
+
+Engine --> GameLoop : Runs
+GameLoop --> Physics : Update
+GameLoop --> Painting : Paint Cells
+GameLoop --> Collision : Check
+GameLoop --> Score : Calculate
+
+WSConfig --> Broker : Configure
+CORSConfig --> RestAPI : Configure
+
+note right of Frontend
+  Runs on http://localhost:5173
+  - SPA with React Router
+  - Real-time updates via WebSocket
+  - Canvas-based rendering
+  - Keyboard controls (WASD/Arrows)
+end note
+
+note left of Backend
+  Runs on http://localhost:8080
+  - REST API for game management
+  - WebSocket for real-time communication
+  - Concurrent game management
+  - Physics simulation at 30 FPS
+end note
+
+note bottom of Broker
+  STOMP Protocol Topics:
+  - /topic/games/{code}/state
+  - /topic/games/{code}/results
+  
+  Message Destinations:
+  - /app/games/{code}/move
+end note
+
+@enduml

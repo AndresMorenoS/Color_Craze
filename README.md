@@ -77,6 +77,15 @@ The frontend will start on `http://localhost:5173`
 - `/topic/games/{code}/results` - Final results
 - `/app/games/{code}/move` - Send player movement
 
+## Documentation
+
+### Architecture
+Comprehensive architecture documentation is available:
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - System design, patterns, and technical decisions
+- **[Architecture Diagrams](docs/diagrams/)** - PlantUML diagrams (context, component, class, sequence, deployment)
+
+See [docs/diagrams/README.md](docs/diagrams/README.md) for diagram viewing instructions.
+
 ## Development
 
 Built with:

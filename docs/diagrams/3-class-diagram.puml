@@ -1,0 +1,222 @@
+@startuml class-diagram
+title Color Craze - Class Diagram (Backend)
+
+skinparam classAttributeIconSize 0
+
+package "Controllers" #lightblue {
+    class GameController {
+        - gameService: GameService
+        + createGame(request: CreateGameRequest): CreateGameResponse
+        + joinGame(code: String, request: JoinGameRequest): JoinGameResponse
+        + getGameState(code: String): GameStateDTO
+    }
+    
+    class WebSocketController {
+        - gameService: GameService
+        + handleMove(code: String, moveRequest: MoveRequest): void
+    }
+}
+
+package "Service" #lightgreen {
+    class GameService {
+        - activeGames: Map<String, Game>
+        - gameThreads: Map<String, Thread>
+        - messagingTemplate: SimpMessagingTemplate
+        - random: Random
+        {static} - MOVE_SPEED: double = 0.3
+        {static} - JUMP_VELOCITY: double = -1.2
+        {static} - GRAVITY: double = 0.08
+        {static} - TICK_RATE_MS: int = 33
+        + createGame(playerName: String): CreateGameResponse
+        + joinGame(code: String, playerName: String, color: PlayerColor): JoinGameResponse
+        + getGameState(code: String): GameStateDTO
+        + handleMove(code: String, moveRequest: MoveRequest): void
+        - startLobbyTimer(code: String): void
+        - startGame(code: String): void
+        - runGameLoop(code: String): void
+        - updateGameState(game: Game): void
+        - updatePlayerPhysics(player: Player, board: Board): void
+        - paintCellsUnderPlayer(player: Player, board: Board): void
+        - endGame(code: String): void
+        - broadcastGameState(code: String): void
+        - buildGameStateDTO(game: Game): GameStateDTO
+        - buildGameResultDTO(game: Game): GameResultDTO
+        - generateGameCode(): String
+    }
+}
+
+package "Model" #lightyellow {
+    enum GameState {
+        LOBBY
+        PLAYING
+        FINISHED
+    }
+    
+    class Game {
+        - code: String
+        - players: Map<String, Player>
+        - board: Board
+        - state: GameState
+        - lobbyStartTime: Instant
+        - gameStartTime: Instant
+        - gameEndTime: Instant
+        - running: boolean
+        {static} - LOBBY_DURATION_SECONDS: int = 15
+        {static} - GAME_DURATION_SECONDS: int = 30
+        {static} - BOARD_WIDTH: int = 40
+        {static} - BOARD_HEIGHT: int = 30
+        {static} - MAX_PLAYERS: int = 4
+        + addPlayer(player: Player): boolean
+        + removePlayer(playerId: String): void
+        + startGame(): void
+        + finishGame(): void
+        + isLobbyExpired(): boolean
+        + isGameExpired(): boolean
+        + getRemainingLobbyTime(): long
+        + getRemainingGameTime(): long
+        + getWinner(): Player
+    }
+    
+    class Player {
+        - id: String
+        - name: String
+        - color: PlayerColor
+        - x: double
+        - y: double
+        - velocityX: double
+        - velocityY: double
+        - isJumping: boolean
+        - score: int
+    }
+    
+    enum PlayerColor {
+        RED
+        BLUE
+        GREEN
+        YELLOW
+    }
+    
+    class Board {
+        - width: int
+        - height: int
+        - cells: Cell[][]
+        + paintCell(x: int, y: int, color: PlayerColor): void
+        + getCellColor(x: int, y: int): PlayerColor
+        + isValidPosition(x: int, y: int): boolean
+        + calculateScores(): Map<PlayerColor, Integer>
+        + isCellPaintable(x: int, y: int): boolean
+        - initializeCells(): void
+        - isPaintableCell(x: int, y: int): boolean
+    }
+    
+    class Cell {
+        - x: int
+        - y: int
+        - paintable: boolean
+        - color: PlayerColor
+    }
+}
+
+package "DTOs" #lightcoral {
+    class CreateGameRequest {
+        + playerName: String
+    }
+    
+    class CreateGameResponse {
+        + gameCode: String
+        + playerId: String
+        + color: String
+    }
+    
+    class JoinGameRequest {
+        + playerName: String
+        + color: PlayerColor
+    }
+    
+    class JoinGameResponse {
+        + playerId: String
+        + success: boolean
+        + message: String
+        + color: String
+    }
+    
+    class MoveRequest {
+        + playerId: String
+        + direction: String
+        + jump: boolean
+    }
+    
+    class GameStateDTO {
+        + gameCode: String
+        + state: String
+        + players: List<PlayerDTO>
+        + board: Map<String, String>
+        + paintableBlocks: List<String>
+        + remainingTime: long
+    }
+    
+    class GameResultDTO {
+        + winnerId: String
+        + winnerName: String
+        + winnerColor: String
+        + scores: List<PlayerScoreDTO>
+    }
+}
+
+package "Config" #lavender {
+    class WebSocketConfig {
+        + configureMessageBroker(registry: MessageBrokerRegistry): void
+        + registerStompEndpoints(registry: StompEndpointRegistry): void
+    }
+    
+    class WebConfig {
+        + addCorsMappings(registry: CorsRegistry): void
+    }
+}
+
+' Relationships
+GameController --> GameService : uses
+WebSocketController --> GameService : uses
+
+GameService --> Game : manages
+GameService --> SimpMessagingTemplate : broadcasts with
+
+Game *-- GameState : has
+Game "1" *-- "1..*" Player : contains
+Game "1" *-- "1" Board : contains
+Player --> PlayerColor : has
+
+Board "1" *-- "900" Cell : contains
+Cell --> PlayerColor : colored by
+
+GameController ..> CreateGameRequest : receives
+GameController ..> CreateGameResponse : returns
+GameController ..> JoinGameRequest : receives
+GameController ..> JoinGameResponse : returns
+GameController ..> GameStateDTO : returns
+
+WebSocketController ..> MoveRequest : receives
+
+GameService ..> CreateGameResponse : creates
+GameService ..> JoinGameResponse : creates
+GameService ..> GameStateDTO : creates
+GameService ..> GameResultDTO : creates
+
+WebSocketConfig ..> "STOMP Broker" : configures
+WebConfig ..> "CORS" : configures
+
+note right of Game
+  State machine managing
+  game lifecycle:
+  LOBBY -> PLAYING -> FINISHED
+end note
+
+note bottom of GameService
+  Core business logic:
+  - Manages concurrent games
+  - Runs game loops at 30 FPS
+  - Applies physics (gravity, collisions)
+  - Broadcasts state via WebSocket
+end note
+
+@enduml
