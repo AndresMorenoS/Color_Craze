@@ -1,0 +1,31 @@
+@startuml context-diagram
+title Color Craze - Context Diagram
+
+skinparam componentStyle rectangle
+
+actor "Jugador" as Player #lightblue
+
+package "Color Craze System" as ColorCrazeSystem #lightgreen {
+    component "Color Craze\nMultiplayer Game" as Game
+}
+
+component "Navegador Web\n(Chrome, Firefox, Safari)" as Browser #lightyellow
+
+Player --> Browser : Accede al juego
+Browser --> Game : HTTP/HTTPS\nWebSocket (STOMP)
+
+note right of Game
+  Sistema de juego multijugador
+  en tiempo real donde los
+  jugadores pintan bloques
+  mientras se mueven
+end note
+
+note left of Player
+  - Crea o se une a partidas
+  - Controla su personaje
+  - Compite para pintar más bloques
+  - Ve resultados en tiempo real
+end note
+
+@enduml

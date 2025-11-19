@@ -1,0 +1,125 @@
+@startuml sequence-diagram
+title Color Craze - Sequence Diagram (Game Flow)
+
+actor "Player 1" as P1 #lightblue
+participant "Browser\n(React App)" as Browser1 #lightyellow
+participant "WebSocket\nClient" as WS1 #lightcyan
+
+actor "Player 2" as P2 #lightgreen
+participant "Browser\n(React App)" as Browser2 #lightyellow
+participant "WebSocket\nClient" as WS2 #lightcyan
+
+participant "REST API\n(Spring Boot)" as API #coral
+participant "GameService" as Service #orange
+participant "Game\n(Model)" as Game #pink
+participant "WebSocket\nBroker" as Broker #gold
+
+== Game Creation ==
+P1 -> Browser1 : Click "Create Game"
+Browser1 -> Browser1 : Enter name
+Browser1 -> API : POST /api/games\n{playerName: "Player1"}
+API -> Service : createGame("Player1")
+Service -> Game ** : new Game(code)
+Service -> Game : addPlayer(player1)
+Service -> Service : startLobbyTimer(code)
+Service --> API : CreateGameResponse(code, playerId, color)
+API --> Browser1 : {gameCode: "ABC123", playerId: "uuid1", color: "RED"}
+Browser1 -> Browser1 : Store playerId, navigate to /lobby/ABC123
+
+Browser1 -> WS1 : Connect to /ws
+WS1 -> Broker : STOMP CONNECT
+Broker --> WS1 : CONNECTED
+Browser1 -> WS1 : Subscribe to /topic/games/ABC123/state
+WS1 -> Broker : SUBSCRIBE
+Service -> Broker : Broadcast initial state
+Broker -> WS1 : GameStateDTO
+WS1 -> Browser1 : Update UI (Lobby with 1 player)
+
+== Player 2 Joins ==
+P2 -> Browser2 : Enter game code "ABC123"
+Browser2 -> API : POST /api/games/ABC123/join\n{playerName: "Player2", color: "BLUE"}
+API -> Service : joinGame("ABC123", "Player2", BLUE)
+Service -> Game : addPlayer(player2)
+Service -> Broker : Broadcast updated state
+Service --> API : JoinGameResponse(success: true)
+API --> Browser2 : {playerId: "uuid2", success: true, color: "BLUE"}
+
+Browser2 -> WS2 : Connect to /ws
+WS2 -> Broker : STOMP CONNECT
+Broker --> WS2 : CONNECTED
+Browser2 -> WS2 : Subscribe to /topic/games/ABC123/state
+WS2 -> Broker : SUBSCRIBE
+
+Broker -> WS1 : GameStateDTO (2 players)
+WS1 -> Browser1 : Update UI (Lobby with 2 players)
+Broker -> WS2 : GameStateDTO (2 players)
+WS2 -> Browser2 : Update UI (Lobby with 2 players)
+
+== Lobby Countdown ==
+loop Every 1 second for 15 seconds
+    Service -> Broker : Broadcast GameStateDTO\n(remaining time)
+    Broker -> WS1 : Update countdown
+    WS1 -> Browser1 : Display countdown
+    Broker -> WS2 : Update countdown
+    WS2 -> Browser2 : Display countdown
+end
+
+== Game Starts ==
+Service -> Service : Lobby timer expires (15s)
+Service -> Game : startGame()
+Game -> Game : Set state = PLAYING
+Game -> Game : Initialize player positions
+Service -> Service : startGameThread()
+Service -> Broker : Broadcast GameStateDTO\n(state: PLAYING)
+Broker -> WS1 : Game started
+WS1 -> Browser1 : Navigate to /game/ABC123
+Broker -> WS2 : Game started
+WS2 -> Browser2 : Navigate to /game/ABC123
+
+== Gameplay Loop (30 FPS) ==
+P1 -> Browser1 : Press Arrow Right
+Browser1 -> WS1 : Send move\n{playerId: "uuid1", direction: "right", jump: false}
+WS1 -> Broker : SEND /app/games/ABC123/move
+Broker -> Service : handleMove(code, moveRequest)
+Service -> Game : Get player
+Game --> Service : player1
+Service -> Service : player1.setVelocityX(0.3)
+
+loop Every 33ms (30 FPS) for 30 seconds
+    Service -> Service : updateGameState(game)
+    Service -> Service : updatePlayerPhysics(player, board)
+    Service -> Service : Apply gravity\nApply velocity\nCheck collisions
+    Service -> Service : paintCellsUnderPlayer(player, board)
+    Service -> Service : updatePlayerScores(game)
+    Service -> Broker : Broadcast GameStateDTO\n(positions, board, scores)
+    Broker -> WS1 : Updated game state
+    WS1 -> Browser1 : Render canvas\nUpdate scores
+    Broker -> WS2 : Updated game state
+    WS2 -> Browser2 : Render canvas\nUpdate scores
+end
+
+P1 -> Browser1 : Press Space (Jump)
+Browser1 -> WS1 : Send move\n{playerId: "uuid1", direction: "right", jump: true}
+WS1 -> Broker : SEND /app/games/ABC123/move
+Broker -> Service : handleMove(code, moveRequest)
+Service -> Service : player1.setVelocityY(-1.2)\nplayer1.setJumping(true)
+
+== Game Ends ==
+Service -> Service : Game time expires (30s)
+Service -> Game : finishGame()
+Game -> Game : Set state = FINISHED
+Game -> Game : calculateFinalScores()
+Service -> Service : endGame(code)
+Service -> Service : buildGameResultDTO(game)
+Service -> Broker : Send to /topic/games/ABC123/results\n(winner, scores)
+Broker -> WS1 : GameResultDTO
+WS1 -> Browser1 : Navigate to /results/ABC123\nDisplay winner & scores
+Broker -> WS2 : GameResultDTO
+WS2 -> Browser2 : Navigate to /results/ABC123\nDisplay winner & scores
+
+note over Service, Broker
+  Game is kept in memory for 60 seconds
+  after ending, then cleaned up
+end note
+
+@enduml

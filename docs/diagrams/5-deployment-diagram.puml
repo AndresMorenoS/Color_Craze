@@ -1,0 +1,182 @@
+@startuml deployment-diagram
+title Color Craze - Deployment Diagram (High Availability)
+
+skinparam nodeStyle rectangle
+
+' Client Layer
+node "Client Device 1\n(PC/Laptop/Tablet)" as Client1 #lightblue {
+    component [Web Browser\n(Chrome/Firefox/Safari)] as Browser1
+    artifact "React SPA\n(JavaScript bundle)" as ReactApp1
+    Browser1 --> ReactApp1
+}
+
+node "Client Device 2\n(PC/Laptop/Tablet)" as Client2 #lightblue {
+    component [Web Browser\n(Chrome/Firefox/Safari)] as Browser2
+    artifact "React SPA\n(JavaScript bundle)" as ReactApp2
+    Browser2 --> ReactApp2
+}
+
+node "Client Device N\n(PC/Laptop/Tablet)" as ClientN #lightblue {
+    component [Web Browser] as BrowserN
+    artifact "React SPA" as ReactAppN
+    BrowserN --> ReactAppN
+}
+
+' Load Balancer Layer (for High Availability)
+node "Load Balancer\n(Nginx/HAProxy)" as LoadBalancer #gold {
+    component [Reverse Proxy\n& SSL Termination] as ReverseProxy
+    component [Health Check\nMonitor] as HealthCheck
+}
+
+' Application Layer (Multiple Instances for HA)
+node "Application Server 1\n(Docker Container)" as AppServer1 #lightgreen {
+    component [Spring Boot App\n:8080] as SpringBoot1
+    component [Embedded Tomcat\nWebSocket Server] as Tomcat1
+    artifact "color-craze.jar" as JAR1
+    SpringBoot1 --> JAR1
+    SpringBoot1 --> Tomcat1
+}
+
+node "Application Server 2\n(Docker Container)" as AppServer2 #lightgreen {
+    component [Spring Boot App\n:8080] as SpringBoot2
+    component [Embedded Tomcat\nWebSocket Server] as Tomcat2
+    artifact "color-craze.jar" as JAR2
+    SpringBoot2 --> JAR2
+    SpringBoot2 --> Tomcat2
+}
+
+node "Application Server N\n(Docker Container)" as AppServerN #lightgreen {
+    component [Spring Boot App\n:8080] as SpringBootN
+    component [Embedded Tomcat\nWebSocket Server] as TomcatN
+    artifact "color-craze.jar" as JARN
+    SpringBootN --> JARN
+    SpringBootN --> TomcatN
+}
+
+' Message Broker Layer (for WebSocket HA)
+node "Message Broker Cluster\n(Redis/RabbitMQ)" as MessageBroker #orange {
+    database "Pub/Sub Channel\n(Game State)" as PubSub
+    component [STOMP Relay\nBroker] as STOMPRelay
+    PubSub --> STOMPRelay
+}
+
+' Shared State Layer (for Game State Sync)
+node "Distributed Cache\n(Redis Cluster)" as Cache #coral {
+    database "Active Games\nCache" as GamesCache
+    database "Player Sessions\nCache" as SessionsCache
+}
+
+' Static Content Delivery
+cloud "CDN\n(CloudFlare/CloudFront)" as CDN #lightyellow {
+    artifact "Static Assets\n(React Build)" as StaticAssets
+}
+
+' Monitoring & Logging (for Availability)
+node "Monitoring Stack" as Monitoring #lavender {
+    component [Prometheus\nMetrics Collector] as Prometheus
+    component [Grafana\nDashboard] as Grafana
+    database [Time-Series DB] as TSDB
+    Prometheus --> TSDB
+    Grafana --> TSDB
+}
+
+node "Logging Stack" as Logging #lightcyan {
+    component [Logstash\nLog Aggregator] as Logstash
+    database [Elasticsearch\nLog Store] as Elasticsearch
+    component [Kibana\nLog Viewer] as Kibana
+    Logstash --> Elasticsearch
+    Kibana --> Elasticsearch
+}
+
+' Connections - Client to Load Balancer
+Client1 -down-> LoadBalancer : HTTPS (443)\nWebSocket (WSS)
+Client2 -down-> LoadBalancer : HTTPS (443)\nWebSocket (WSS)
+ClientN -down-> LoadBalancer : HTTPS (443)\nWebSocket (WSS)
+
+' CDN for Static Assets
+CDN -up-> Client1 : Serve React App
+CDN -up-> Client2 : Serve React App
+CDN -up-> ClientN : Serve React App
+
+' Load Balancer to App Servers
+ReverseProxy -down-> SpringBoot1 : HTTP (8080)\nWS Upgrade
+ReverseProxy -down-> SpringBoot2 : HTTP (8080)\nWS Upgrade
+ReverseProxy -down-> SpringBootN : HTTP (8080)\nWS Upgrade
+
+HealthCheck ..> SpringBoot1 : Health Check\n(GET /actuator/health)
+HealthCheck ..> SpringBoot2 : Health Check
+HealthCheck ..> SpringBootN : Health Check
+
+' App Servers to Message Broker
+SpringBoot1 --> MessageBroker : Publish/Subscribe\nGame Events
+SpringBoot2 --> MessageBroker : Publish/Subscribe\nGame Events
+SpringBootN --> MessageBroker : Publish/Subscribe\nGame Events
+
+' App Servers to Distributed Cache
+SpringBoot1 --> Cache : Read/Write\nGame State
+SpringBoot2 --> Cache : Read/Write\nGame State
+SpringBootN --> Cache : Read/Write\nGame State
+
+' Monitoring Connections
+SpringBoot1 ..> Monitoring : Metrics & Logs
+SpringBoot2 ..> Monitoring : Metrics & Logs
+SpringBootN ..> Monitoring : Metrics & Logs
+
+SpringBoot1 ..> Logging : Application Logs
+SpringBoot2 ..> Logging : Application Logs
+SpringBootN ..> Logging : Application Logs
+
+LoadBalancer ..> Monitoring : Access Logs & Metrics
+
+note top of LoadBalancer
+  **High Availability Features:**
+  - Round-robin load balancing
+  - Sticky sessions for WebSocket
+  - Automatic failover
+  - SSL/TLS termination
+  - Rate limiting
+end note
+
+note bottom of MessageBroker
+  **Scalability & HA:**
+  - Distributes WebSocket messages
+    across multiple app instances
+  - Ensures all clients receive
+    game state updates
+  - Survives single node failures
+end note
+
+note bottom of Cache
+  **Consistency & HA:**
+  - Shared game state across servers
+  - Redis Sentinel for failover
+  - Sub-second latency
+  - Eventual consistency model
+end note
+
+note right of Monitoring
+  **Availability Monitoring:**
+  - Real-time metrics
+  - Alerting on failures
+  - Performance dashboards
+  - Uptime tracking
+end note
+
+note bottom of AppServer1
+  **Container Orchestration:**
+  - Kubernetes or Docker Swarm
+  - Auto-scaling based on load
+  - Rolling deployments
+  - Self-healing (restart on failure)
+  - Resource limits (CPU/Memory)
+end note
+
+note top of CDN
+  **Performance & Availability:**
+  - Global edge locations
+  - Caching static assets
+  - DDoS protection
+  - Reduced latency
+end note
+
+@enduml

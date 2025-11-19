@@ -77,6 +77,18 @@ The frontend will start on `http://localhost:5173`
 - `/topic/games/{code}/results` - Final results
 - `/app/games/{code}/move` - Send player movement
 
+## Architecture Diagrams
+
+Detailed architecture documentation with PlantUML diagrams is available in [`docs/diagrams/`](docs/diagrams/):
+
+- **Context Diagram**: System boundaries and external actors
+- **Component Diagram**: Major components and their relationships
+- **Class Diagram**: Backend object-oriented design
+- **Sequence Diagram**: Game flow and interactions
+- **Deployment Diagram**: High availability deployment architecture
+
+See [docs/diagrams/README.md](docs/diagrams/README.md) for viewing instructions.
+
 ## Development
 
 Built with:
